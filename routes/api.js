@@ -21,20 +21,40 @@ router.use(passport.session())
 router.use(flash())
 
 //user
-router.get('/users',userController.getUsers)
-router.post('/users',userController.saveUser)
+router.get('/users',checkNotAuthenticated,userController.getUsers)
+router.post('/users',checkNotAuthenticated,userController.saveUser)
 
 //login
-router.get('/login',authController.login)
+router.get('/login',checkNotAuthenticated,checkNotAuthenticated,authController.login)
 router.post('/login',passport.authenticate('local',{
    successRedirect:'/index',
    failureRedirect:'/login',
    failureFlash:true 
 }))
-router.get('/index',async(req,res)=>{res.render('index.ejs')})
+
+//landing page
+router.get('/index',checkAuthenticated,async(req,res)=>{res.render('index.ejs',{name:req.user.id})})
 
 //register user
-router.get('/register',authController.register)
-router.post('/register',authController.completeRegistration)
+router.get('/register',checkNotAuthenticated,authController.register)
+router.post('/register',checkNotAuthenticated,authController.completeRegistration)
+
+
+//authenticated check
+function checkAuthenticated(req,res,next){
+    if(req.isAuthenticated()){
+         next()
+    }
+
+    res.redirect('/login')
+}
+
+function checkNotAuthenticated(req,res,next){
+    if(req.isAuthenticated()){
+        res.redirect('/index')
+    }
+
+    next()
+}
 
 module.exports=router;
